@@ -4,12 +4,12 @@ pipeline{
         IMAGE_REPO_NAME="kishore-devops"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "969849892126.dkr.ecr.eu-north-1.amazonaws.com/${IMAGE_REPO_NAME}"
-        SONARQUBE_SERVER = "http://52.191.211.156:9001"
-        SONARQUBE_TOKEN = "squ_f4270237c27e2430b0b987401159f33c450b73d5"
+        SONARQUBE_SERVER = "http://98.70.58.127:9000"
+        SONARQUBE_TOKEN = "8787534c7c916b53e53756f0f4de23e66b8badde"
         EC2_INSTANCE_IP="13.51.106.20"
         GITBRANCH_NAME="main"
         credentials_Id="jenkins-bitbucket"
-        REPO_URL="https://github.com/kishore-tailwinds/kishore-application.git"
+        REPO_URL="https://github.com/Mani-tailwinds/jenkins-pipeline.git"
         ECR_URL="969849892126.dkr.ecr.eu-north-1.amazonaws.com"
         SSH_USERNAME="ubuntu"
         CONTAINER_NAME="condescending_gates"
@@ -98,7 +98,7 @@ pipeline{
        stage('SSH deploy') {
            steps {
                sshagent(['ssh-agent-cred']) {
-                    sh """
+                    sh '''
                         ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${EC2_INSTANCE_IP}
                           # Docker login to ECR
                           $(aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION})
@@ -106,10 +106,10 @@ pipeline{
                           sudo docker rm -f ${CONTAINER_NAME} || true
                           # Remove old image if exists
                           sudo docker rmi ${REPOSITORY_URI}:${IMAGE_TAG} || true
-    //                   """
-    //             }
-    //         }
-    //     }
+                       '''
+               }
+           }
+         }
         //    steps{
         //        script{
         //            hangoutsNotify message: "Job ${IMAGE_REPO_NAME} is completed.",tokencredentialsId: 'chat-notification',threadByJob: false
