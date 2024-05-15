@@ -7,7 +7,7 @@ pipeline{
         SONARQUBE_SERVER = "https://sam-cicd.centralindia.cloudapp.azure.com/sonar"
         SONARQUBE_TOKEN = "sqa_d035564f755a57a2f237ef46d1b73fa16aa2451f"
         EC2_INSTANCE_IP="ec2-3-10-238-48.ap-south-1.compute.amazonaws.com"
-        GITBRANCH_NAME=“main"
+        GITBRANCH_NAME=“*/dev"
         credentials_Id="jenkins-bitbucket"
         REPO_URL="https://github.com/Mani-tailwinds/jenkins-pipeline.git"
         ECR_URL="475157955544.dkr.ecr.ap-south-1.amazonaws.com"
