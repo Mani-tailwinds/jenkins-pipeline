@@ -5,11 +5,11 @@ pipeline{
         IMAGE_TAG="latest"
         REPOSITORY_URI = "537823431186.dkr.ecr.ap-south-1.amazonaws.com/${IMAGE_REPO_NAME}"
         SONARQUBE_SERVER = "http://98.70.58.127:9000"
-        SONARQUBE_TOKEN = "8787534c7c916b53e53756f0f4de23e66b8badde"
-        EC2_INSTANCE_IP="15.207.20.133"
+        SONARQUBE_TOKEN = "7a92d0f3a92350d38cafba04562ea8a81310ba9e"
+        EC2_INSTANCE_IP="13.233.144.226"
         GITBRANCH_NAME="main"
         credentials_Id="jenkins-bitbucket"
-        REPO_URL="https://github.com/Mani-tailwinds/mani-devops.git"
+        REPO_URL="https://github.com/Mani-tailwinds/jenkins-pipeline.git"
         ECR_URL="537823431186.dkr.ecr.ap-south-1.amazonaws.com"
         SSH_USERNAME="ubuntu"
         CONTAINER_NAME="condescending_gates"
@@ -19,19 +19,19 @@ pipeline{
     stage('Checkout') {
       steps {
         sh 'echo passed'
-        //git branch: 'main', url: 'https://github.com/Mani-tailwinds/jenkins-pipeline.git'
+        git branch: 'main', url: 'https://github.com/Mani-tailwinds/jenkins-pipeline.git'
       }
     }
     stage('Build and Test') {
       steps {
         sh 'ls -ltr'
-        // build the project and create a JAR file
+      
         sh 'cd java-maven-sonar/spring-boot-app && mvn clean package'
       }
     }
     stage('Static Code Analysis') {
       environment {
-        SONAR_URL = "http://98.70.58.127:9000"
+        SONAR_URL = "${SONARQUBE_SERVER}"
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
@@ -39,5 +39,44 @@ pipeline{
         }
       }
     }
+    stage('Build  Docker Image') {
+
+      steps {
+        script {
+            sh 'cd java-maven-sonar/spring-boot-app && docker build -t "${IMAGE_REPO_NAME}:${IMAGE_TAG}" .'
+  }
+      }
+}
+       stage('ECR push') {
+            steps {
+                script {
+                    sh "aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${ECR_URL}"
+                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:${IMAGE_TAG}"
+                    sh "docker push ${ECR_URL}/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                }
+            }
+        }
+      stage('SSH deploy'){
+            steps{
+                sshagent(['ssh-agent-cred']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${EC2_INSTANCE_IP} '
+                            #remove old container
+                            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 537823431186.dkr.ecr.ap-south-1.amazonaws.com
+                            docker pull 537823431186.dkr.ecr.ap-south-1.amazonaws.com/mani-devops:latest
+                            if [ \$(docker ps -a -q -f name=${CONTAINER_NAME}) ]; then
+                                docker rm -f ${CONTAINER_NAME}
+                            fi
+                            docker run -d --name condescending_gates -p 3003:3003 537823431186.dkr.ecr.ap-south-1.amazonaws.com/mani-devops:latest
+                         '
+                            
+                    """
+                }
+               
+            }
+        }
+
+      
+      
   }
 }
