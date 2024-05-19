@@ -1,0 +1,43 @@
+pipeline{
+    agent any
+    environment{
+        IMAGE_REPO_NAME="mani-devops"
+        IMAGE_TAG="latest"
+        REPOSITORY_URI = "537823431186.dkr.ecr.ap-south-1.amazonaws.com/${IMAGE_REPO_NAME}"
+        SONARQUBE_SERVER = "http://98.70.58.127:9000"
+        SONARQUBE_TOKEN = "8787534c7c916b53e53756f0f4de23e66b8badde"
+        EC2_INSTANCE_IP="15.207.20.133"
+        GITBRANCH_NAME="main"
+        credentials_Id="jenkins-bitbucket"
+        REPO_URL="https://github.com/Mani-tailwinds/mani-devops.git"
+        ECR_URL="537823431186.dkr.ecr.ap-south-1.amazonaws.com"
+        SSH_USERNAME="ubuntu"
+        CONTAINER_NAME="condescending_gates"
+        PORT_NUMBER="3003"
+    }
+  stages {
+    stage('Checkout') {
+      steps {
+        sh 'echo passed'
+        //git branch: 'main', url: 'https://github.com/Mani-tailwinds/jenkins-pipeline.git'
+      }
+    }
+    stage('Build and Test') {
+      steps {
+        sh 'ls -ltr'
+        // build the project and create a JAR file
+        sh 'cd java-maven-sonar/spring-boot-app && mvn clean package'
+      }
+    }
+    stage('Static Code Analysis') {
+      environment {
+        SONAR_URL = "http://34.201.116.83:9000"
+      }
+      steps {
+        withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+          sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
+        }
+      }
+    }
+  }
+}
